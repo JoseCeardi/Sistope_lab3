@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "paging.h"
+#include "paginacion.h"
 
 int main() {
     inicializar_sistema();
