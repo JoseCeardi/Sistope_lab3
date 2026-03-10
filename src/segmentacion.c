@@ -8,7 +8,7 @@
 
 //
 struct segment_table* initSegmentTable(int numSegments, uint64_t* limits) {
-    // 1. Reservar memoria para la estructura de la tabla
+    // Reservar memoria para la estructura de la tabla
     struct segment_table* table = (struct segment_table*)malloc(sizeof(struct segment_table));
     if (table == NULL) {
         perror("Error: No se pudo asignar memoria para la tabla de segmentos");
@@ -17,7 +17,7 @@ struct segment_table* initSegmentTable(int numSegments, uint64_t* limits) {
 
     table->num_segments = numSegments;
 
-    // 2. Reservar memoria para el arreglo dinámico de segmentos
+    // Reservar memoria para el arreglo dinámico de segmentos
     table->segments = (struct segment_entry*)malloc(numSegments * sizeof(struct segment_entry));
     if (table->segments == NULL) {
         perror("Error: No se pudo asignar memoria para el arreglo de segmentos");
@@ -25,7 +25,7 @@ struct segment_table* initSegmentTable(int numSegments, uint64_t* limits) {
         exit(EXIT_FAILURE);
     }
 
-    // 3. Inicializar cada segmento con su base y límite
+    // Inicializar cada segmento con su base y límite
     uint64_t currentBase = 0x1000; // Dirección física inicial ficticia 
 
     for (int i = 0; i < numSegments; i++) {
@@ -46,7 +46,7 @@ struct segment_table* initSegmentTable(int numSegments, uint64_t* limits) {
 int translateAddress(struct segment_table* table, uint64_t segId, uint64_t offset, uint64_t* physicalAddress) {
     
     // 1. Validación de seguridad básica (evitar que el programa se caiga de verdad)
-    if (segId >= table->num_segments) {
+    if (segId >= (uint64_t)table->num_segments) {
         return 0; // Segfault: El proceso intentó acceder a un segmento que no existe
     }
 
