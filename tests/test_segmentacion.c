@@ -4,10 +4,10 @@
 #include <stdlib.h>
 
 
-
+// gcc -Iinclude -Wall -Wextra src/segmentacion.c tests/test_segmentacion.c -o test_seg
 
  int main(){
-    printf("prueba segmentacion, 4 limits 1 hebra");
+    printf("prueba segmentacion, 4 limits 1 hebra\n");
 
 
     int ops =  10000;
@@ -45,7 +45,7 @@
     printf("Segmentation Faults simulados: %d\n", segFaults);
     
     if ((transOk + segFaults) == ops) {
-        printf("¡Éxito! La suma de resultados coincide con las operaciones totales.\n");
+        printf("La suma de resultados coincide con las operaciones totales.\n");
     } else {
         printf("Error: La suma de resultados no coincide con las operaciones totales.\n");
     }
