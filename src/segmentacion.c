@@ -45,15 +45,15 @@ struct segment_table* initSegmentTable(int numSegments, uint64_t* limits) {
 //despues haces un if para los seg fault, 1 esta ok, 0 hay seg fault
 int translateAddress(struct segment_table* table, uint64_t segId, uint64_t offset, uint64_t* physicalAddress) {
     
-    // 1. Validación de seguridad básica (evitar que el programa se caiga de verdad)
+    // Validación de seguridad básica (evitar que el programa se caiga de verdad)
     if (segId >= (uint64_t)table->num_segments) {
         return 0; // Segfault: El proceso intentó acceder a un segmento que no existe
     }
 
-    // 2. Extraer el segmento que el hilo está pidiendo
+    // Extraer el segmento que el hilo está pidiendo
     struct segment_entry segment = table->segments[segId];
 
-    // 3. Validación, offset < limit
+    //  Validación, offset < limit
     if (offset >= segment.limit) {
         return 0; // Segfault simulado: se pasó del límite permitido 
     }
