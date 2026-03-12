@@ -9,6 +9,7 @@
 #include "paginacion.h"
 #include "segmentacion.h"
 #include "tlb.h"
+#include "workloads.h"
 
 
 // Capturar argumentos argv
@@ -45,6 +46,7 @@ extern pthread_mutex_t metricsMutex;
 
 void iniciar_simulacion(Config* config);
 void* ejecutar_hilo(void* arg);
+void start_simulation(Config* config);
 
 
 

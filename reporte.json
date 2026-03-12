@@ -1,0 +1,8 @@
+{
+  "mode": "tlb",
+  "workload": "8020",
+  "total_translation_ok": 400,
+  "total_segfaults": 0,
+  "tlb_hits": 101,
+  "tlb_misses": 299
+}
