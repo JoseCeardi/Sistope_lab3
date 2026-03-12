@@ -8,7 +8,7 @@
 */
 
 typedef struct{
-    uint64_t frame_number; 
+    int frame_number; 
     int valid;
     int vpn; // page_number
 } tlb_entry; 

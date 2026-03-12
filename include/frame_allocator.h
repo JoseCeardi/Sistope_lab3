@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include "paginacion.h"
 #include "tlb.h" 
+#include "simulator.h"
+#include <pthread.h>
 
 #define NUM_FRAMES 32
 
@@ -28,8 +30,10 @@ extern ColaFifo Global_Fifo;
 // esto para que se invaliden todas las tlb a la vez si ocurre un eviction
 extern PageTable* Thread_Tables[10]; 
 extern tlb* Thread_TLBs[10];
+extern pthread_mutex_t RamMutex;
 
 void inicializar_ram();
+void simular_carga_disco();
 int requestReplaceFrame(int t_id, int page_index);
 
 #endif

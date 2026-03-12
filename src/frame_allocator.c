@@ -1,12 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "frame_allocator.h"
+#include <time.h>
 
 // Definición real de los datos compartidos
 Frame RAM[NUM_FRAMES];
 ColaFifo Global_Fifo;
-PageTable* Thread_Tables[10];
-tlb* Thread_TLBs[10];
 
 void inicializar_ram() {
     for (int i = 0; i < NUM_FRAMES; i++) {
@@ -25,6 +24,15 @@ void inicializar_ram() {
 }
 
 
+// dormir 5ms
+// fuente: https://www.geeksforgeeks.org/c/c-nanosleep-function/
+void simular_carga_disco() {
+    int margen = (rand() % 5 + 1) * 1000000; 
+    struct timespec remaining, request = { 0, margen };
+    nanosleep(&request, &remaining);
+}
+
+
 /*
 Si hay marco disponible: reemplaza directo en la RAM
 
@@ -32,11 +40,24 @@ Si no hay marco disponible:
     - Tenemos que cambiar el marco a lo fifo
     - Tambien quitarlo de la TP del thread que lo ocupaba
     - Actualizar historial FIFO
-*/
+
+nota:
+    Como esto accede a la RAM (compartida por todos los precesos), necesitamos controlar la variable SAFE
+    Pero como las hebras al iniciarse usan (void*) no podría pasarlo como parámetro
+    por eso lo expresamos como extern.
+        - Tanto GlobConfig como metricsMutex son extern, asi puedo preguntar
+          GlobConfig.unsafe y saber el modo.
+    */
 int requestReplaceFrame(int t_id, int page_index) {
     int frame = -1;
 
-    // buscar marco libre
+    // SAFE
+    if (!GlobConfig.unsafe) {
+        pthread_mutex_lock(&RamMutex); 
+    }
+    GlobStats.total_page_faults++;
+
+     // buscar marco libre --> SC accedemos a la RAM
     for (int i = 0; i < NUM_FRAMES; i++) {
         if (RAM[i].valid == 0) {
             frame = i;
@@ -49,6 +70,9 @@ int requestReplaceFrame(int t_id, int page_index) {
 
     // Si no hay libres -> Reemplazo FIFO
     if (frame == -1) {
+
+        // FAULT
+        GlobStats.total_evictions++;
         frame = Global_Fifo.history[Global_Fifo.head];
 
         int victim_thread = RAM[frame].thread_id; //quienes se van
@@ -67,12 +91,20 @@ int requestReplaceFrame(int t_id, int page_index) {
         // Actualizar cola FIFO
         Global_Fifo.history[Global_Fifo.head] = frame;
         Global_Fifo.head = (Global_Fifo.head + 1) % NUM_FRAMES;
+
     }
 
     // Ocupar el frame
     RAM[frame].thread_id = t_id;
     RAM[frame].page_index = page_index;
     RAM[frame].valid = 1;
+
+    if (!GlobConfig.unsafe) {
+        pthread_mutex_unlock(&RamMutex);
+    }
+
+    // dormir 5ms
+    simular_carga_disco();
 
     return frame; 
 }
