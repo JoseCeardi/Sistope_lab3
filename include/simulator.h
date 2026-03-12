@@ -20,6 +20,9 @@ typedef struct {
     int seed;
     bool unsafe;
     bool stats_report;
+
+    int num_segments;
+    uint64_t* seg_limits;
 } Config;
 
 // estadisticas

@@ -56,8 +56,7 @@ void* execute_thread(void* arg){
         }
 
     } else if (strcmp(GlobConfig.mode, "seg") == 0) {
-        uint64_t limites[] = {1024, 2048, 1024, 512};
-        STable = initSegmentTable(4, limites);
+        STable = initSegmentTable(GlobConfig.num_segments, GlobConfig.seg_limits);
     }
 
     // 2° Bucle de ejecución de operaciones
@@ -111,7 +110,20 @@ void* execute_thread(void* arg){
         } 
         // (B) SEGMENTACION
         else if (STable != NULL) { 
-            // TODO: agregar aca lo de segmentacion
+            //  Generar la dirección (segId, offset)
+            uint64_t segIdAleatorio = rand() % STable->num_segments; 
+            uint64_t offsetAleatorio = rand() % 9000; 
+            uint64_t pa = 0;
+
+            // traducir direccion
+            int res = translateAddress(STable, segIdAleatorio, offsetAleatorio, &pa);
+
+            // registrar datos
+            if (res == 1) {
+                registrar_metrica(&GlobStats.total_translation_ok);
+            } else {
+                registrar_metrica(&GlobStats.total_segfaults);
+            }
         }
     }
 

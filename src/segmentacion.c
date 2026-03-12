@@ -58,7 +58,7 @@ int translateAddress(struct segment_table* table, uint64_t segId, uint64_t offse
         return 0; // Segfault simulado: se pasó del límite permitido 
     }
 
-    // 4. Calcular la dirección física: PA = base + offset
+    // Calcular la dirección física: PA = base + offset
     *physicalAddress = segment.base + offset;
 
     return 1; 

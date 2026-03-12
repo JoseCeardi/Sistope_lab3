@@ -1,5 +1,111 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <getopt.h> 
+#include "simulator.h"
+
+int main(int argc, char *argv[]) {
+    // Inicializar GlobConfig con los valores por defecto 
+    GlobConfig.mode = NULL;           
+    GlobConfig.num_threads = 1;       // Default: 1
+    GlobConfig.ops_per_thread = 1000; // Default: 1000
+    GlobConfig.workload = "uniform";  // Default: uniform
+    GlobConfig.seed = 42;             // Default: 42
+    GlobConfig.unsafe = false;        // Default: false (FALSE = modo SAFE)
+    GlobConfig.stats_report = false;  // Default: false
+    GlobConfig.num_segments = 4;      // Default: 4
+
+    // Memoria por defecto para 4 segmentos de 4096 bytes
+    GlobConfig.seg_limits = malloc(4 * sizeof(uint64_t));
+    for (int i = 0; i < 4; i++) {
+        GlobConfig.seg_limits[i] = 4096;
+    }
+
+    
+    int opt;
+    int option_index = 0;
+    static struct option long_options[] = {
+        // { "nombre_flag", tiene_argumento, flag_ptr, 'letra_atajo' }
+        {"mode",           required_argument, 0, 'm'},
+        {"threads",        required_argument, 0, 't'},
+        {"ops-per-thread", required_argument, 0, 'o'},
+        {"workload",       required_argument, 0, 'w'},
+        {"seed",           required_argument, 0, 's'},
+        {"unsafe",         no_argument,       0, 'u'},
+        {"stats",          no_argument,       0, 'r'}, // r de report
+        {"segments",       required_argument, 0, 'g'}, // g de segment
+        {"seg-limits",     required_argument, 0, 'l'}, // l de limits
+        // TODO: falta agregar flags
+        {0, 0, 0, 0}
+    };
+
+
+    // Los ":" indican que esa letra espera un valor después
+    while ((opt = getopt_long(argc, argv, "m:t:o:w:s:urg:l:", long_options, &option_index)) != -1) {
+        switch (opt) {
+            case 'm': GlobConfig.mode = strdup(optarg); break;
+            case 't': GlobConfig.num_threads = atoi(optarg); break;
+            case 'o': GlobConfig.ops_per_thread = atoi(optarg); break;
+            case 'w': GlobConfig.workload = strdup(optarg); break;
+            case 's': GlobConfig.seed = atoi(optarg); break;
+            case 'u': GlobConfig.unsafe = true; break;
+            case 'r': GlobConfig.stats_report = true; break;
+            case 'g': GlobConfig.num_segments = atoi(optarg); break;
+            case 'l': {
+                
+                free(GlobConfig.seg_limits); // Liberamos el default
+                GlobConfig.seg_limits = malloc(GlobConfig.num_segments * sizeof(uint64_t));
+                
+                int i = 0;
+                // strtok corta un texto usando un delimitador (la coma)
+                char *token = strtok(optarg, ",");
+                while (token != NULL && i < GlobConfig.num_segments) {
+                    GlobConfig.seg_limits[i] = strtoull(token, NULL, 10);
+                    token = strtok(NULL, ",");
+                    i++;
+                }
+                break;
+            }
+            default:
+                fprintf(stderr, "Uso incorrecto de argumentos.\n");
+                exit(EXIT_FAILURE);
+        }
+    }
+
+    // Validar que ingresaron el flag obligatorio --mode
+    if (GlobConfig.mode == NULL) {
+        fprintf(stderr, "Error: El flag --mode {seg|page} es obligatorio.\n");
+        exit(EXIT_FAILURE);
+    }
+
+
+    srand(GlobConfig.seed);
+
+
+    start_simulation(&GlobConfig);
+
+    // TODO: Llamar al método que genera los reportes en consola y JSON si GlobConfig.stats_report es true.
+
+    return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//main vienj, borrar despues
+/* #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 
 #include "frame_allocator.h"
@@ -87,4 +193,4 @@ int main() {
 
     printf("=== FIN DE LA PRUEBA ===\n");
     return 0;
-}
+} */
