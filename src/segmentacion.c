@@ -10,7 +10,17 @@ NOTA:
 */
 
 
-// inicia la tabla de segmentos
+/*
+ * Función: initSegmentTable
+ * Descripción: Inicializa la tabla de segmentos para un proceso/hilo. Reserva la memoria dinámica necesaria para la estructura principal y su arreglo interno de segmentos. 
+ * Además, calcula una dirección base física simulada para cada segmento (comenzando en 0x1000) asegurando que no se superpongan, añadiendo un gap de seguridad de 256 bytes.
+ * Entrada:
+ * - numSegments (int): Cantidad total de segmentos que tendrá la tabla.
+ * - limits (uint64_t*): Arreglo con los tamaños máximos (límites) de cada segmento.
+ * Salida:
+ * - struct segment_table*: Puntero a la nueva tabla de segmentos inicializada. 
+ * (Nota: Si falla la asignación de memoria, el programa aborta con exit(EXIT_FAILURE)).
+ */
 struct segment_table* initSegmentTable(int numSegments, uint64_t* limits) {
 
     // Reservar memoria para la estructura de la tabla
@@ -45,8 +55,18 @@ struct segment_table* initSegmentTable(int numSegments, uint64_t* limits) {
 }
 
 
-// traduce la la direccion virtual y verifica limites o SegFaults
-int translateAddress(struct segment_table* table, uint64_t segId, uint64_t offset, uint64_t* physicalAddress) {
+/*
+ * Función: translateAddress
+ * Descripción: Traduce una dirección virtual (compuesta por un ID de segmento y un offset) a una dirección física simulada. Realiza dos validaciones de seguridad críticas: 
+ * comprueba que el segmento exista en la tabla del hilo y verifica que el offset no exceda el límite de memoria asignado a ese segmento. Si es válido, calcula la dirección.
+ * Entrada:
+ * - table (struct segment_table*): Puntero a la tabla de segmentos del hilo actual.
+ * - segId (uint64_t): Identificador del segmento al que se solicita acceso.
+ * - offset (uint64_t): Desplazamiento en bytes dentro del segmento.
+ * - physicalAddress (uint64_t*): Puntero donde se almacenará la dirección física calculada.
+ * Salida:
+ * - int: Retorna 1 si la traducción es exitosa. Retorna 0 si falla alguna validación de seguridad (simulando un Segmentation Fault).
+ */int translateAddress(struct segment_table* table, uint64_t segId, uint64_t offset, uint64_t* physicalAddress) {
 
     // Validación de seguridad
     if (segId >= (uint64_t)table->num_segments) {
@@ -68,7 +88,15 @@ int translateAddress(struct segment_table* table, uint64_t segId, uint64_t offse
 }
 
 
-
+/*
+ * Función: destroySegmentTable
+ * Descripción: Libera toda la memoria dinámica reservada para la tabla de segmentos. Primero verifica y libera el arreglo interno de descriptores de segmento, y finalmente libera la estructura principal de la tabla. 
+ * Esto es crucial para prevenir fugas de memoria (memory leaks) al terminar el hilo.
+ * Entrada:
+ * - table (struct segment_table*): Puntero a la tabla de segmentos que se desea destruir.
+ * Salida:
+ * - void: No retorna ningún valor.
+ */
 void destroySegmentTable(struct segment_table* table) {
     if (table != NULL) {
 
@@ -79,3 +107,22 @@ void destroySegmentTable(struct segment_table* table) {
         free(table);
     }
 }
+
+
+
+
+
+
+
+/*
+ * Función: translateAddress
+ * Descripción: Simula la MMU traduciendo una dirección lógica (virtual) a una dirección física. Verifica rigurosamente que el identificador de segmento exista en la tabla y que el 
+ * desplazamiento (offset) solicitado no supere el límite permitido para dicho segmento. Si las validaciones pasan, calcula la dirección física sumando la base y el offset.
+ * * Entrada:
+ * - table (struct segment_table*): Puntero a la tabla de segmentos del hilo/proceso.
+ * - segId (uint64_t): Identificador del segmento al que se intenta acceder.
+ * - offset (uint64_t): Desplazamiento (en bytes) dentro del segmento.
+ * - physicalAddress (uint64_t*): Puntero donde se guardará la dirección física calculada.
+ * * Salida:
+ * - int: Retorna 1 si la traducción fue exitosa (acceso válido). Retorna 0 si ocurre un fallo de segmentación simulado (Segmentation Fault) por segmento inexistente o límite excedido.
+ */
