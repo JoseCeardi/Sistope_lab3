@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "paginacion.h"
-#include "simulator.h" // <--- AGREGAR ESTO PARA RECONOCER GlobConfig
+#include "simulator.h"
 
 
 // Tanto la SegTable como la PageTable son privadas de cada proceso,

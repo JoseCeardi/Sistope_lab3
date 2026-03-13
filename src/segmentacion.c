@@ -3,20 +3,16 @@
 #include <stdint.h>
 #include "segmentacion.h"
 
-//apuntes, brorrar despues
-// --seg-limits dicta la "distancia" o el desplazamiento que habrá entre las direcciones base de cada segmento -> limits var
-
-
-
-
 /*
 NOTA:
     Pese a que la paginacion es directa a la memoria principal con frame_allocator.c, el caso de la segmentación no se pide eso,
     el laboratorio solo se pide ver temas de limites y segmentation faults.
 */
 
-//
+
+// inicia la tabla de segmentos
 struct segment_table* initSegmentTable(int numSegments, uint64_t* limits) {
+
     // Reservar memoria para la estructura de la tabla
     struct segment_table* table = (struct segment_table*)malloc(sizeof(struct segment_table));
     if (table == NULL) {
@@ -35,14 +31,14 @@ struct segment_table* initSegmentTable(int numSegments, uint64_t* limits) {
     }
 
     // Inicializar cada segmento con su base y límite
-    uint64_t currentBase = 0x1000; // Dirección física inicial ficticia 
+    uint64_t currentBase = 0x1000; // Dirección física inicial ficticia
 
     for (int i = 0; i < numSegments; i++) {
-        table->segments[i].limit = limits[i]; 
+        table->segments[i].limit = limits[i];
         table->segments[i].base = currentBase;
 
         // Para el siguiente segmento, movemos la base física, sumándole el límite del segmento actual para que no se superpongan
-        currentBase += limits[i] + 256; 
+        currentBase += limits[i] + 256;
     }
 
     return table;
@@ -51,10 +47,10 @@ struct segment_table* initSegmentTable(int numSegments, uint64_t* limits) {
 
 // traduce la la direccion virtual y verifica limites o SegFaults
 int translateAddress(struct segment_table* table, uint64_t segId, uint64_t offset, uint64_t* physicalAddress) {
-    
-    // Validación de seguridad básica (evitar que el programa se caiga de verdad)
+
+    // Validación de seguridad
     if (segId >= (uint64_t)table->num_segments) {
-        return 0; // Segfault: El proceso intentó acceder a un segmento que no existe [cite: 105]
+        return 0; // Segfault
     }
 
     // Extraer el segmento que el hilo está pidiendo
@@ -62,13 +58,13 @@ int translateAddress(struct segment_table* table, uint64_t segId, uint64_t offse
 
     //  Validación, offset < limit
     if (offset >= segment.limit) {
-        return 0; // Segfault simulado: se pasó del límite permitido [cite: 104, 240]
+        return 0; // Segfault simulado: se pasó del límite permitido
     }
 
     // Calcular la dirección física: PA = base + offset
-    *physicalAddress = segment.base + offset; // [cite: 100, 241]
+    *physicalAddress = segment.base + offset;
 
-    return 1; 
+    return 1;
 }
 
 
@@ -77,7 +73,7 @@ void destroySegmentTable(struct segment_table* table) {
     if (table != NULL) {
 
         if (table->segments != NULL) {
-            free(table->segments); //liberamos el arreglo de segmentos
+            free(table->segments);
         }
         
         free(table);

@@ -9,17 +9,15 @@ int main(int argc, char *argv[]) {
     // Leer y configurar los parámetros de entrada
     parse_arguments(argc, argv);
 
-    // SEGURO DE VIDA ANTI-CRASHEO (Evita el Floating Point Exception)
+    // En caso de que tire size 0 ponemos un por defecto
     if (GlobConfig.page_size == 0) GlobConfig.page_size = 4096;
     if (GlobConfig.pages == 0) GlobConfig.pages = 64;
     if (GlobConfig.num_segments == 0) GlobConfig.num_segments = 4;
 
-    // Inicializar la semilla de aleatoriedad
     srand(GlobConfig.seed);
 
-    // Preparar cronómetros con timeval (No usa CLOCK_MONOTONIC)
     struct timeval start, end;
-    
+
     // Iniciar cronómetro
     gettimeofday(&start, NULL);
 
@@ -28,10 +26,9 @@ int main(int argc, char *argv[]) {
 
     // Detener cronómetro
     gettimeofday(&end, NULL);
-    
+
     // Calcular métricas de tiempo
-    GlobStats.runtime_sec = (end.tv_sec - start.tv_sec) + 
-                            (end.tv_usec - start.tv_usec) / 1000000.0;
+    GlobStats.runtime_sec = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
     
     // Calcular tiempo promedio por operación en nanosegundos
     int total_ops = GlobConfig.num_threads * GlobConfig.ops_per_thread;

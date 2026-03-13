@@ -6,12 +6,12 @@
 #include "frame_allocator.h"
 #include "simulator.h"
 
-// Definición real de los datos compartidos dinámicos
+// Definición datos compartidos dinámicos
 Frame* RAM = NULL;
 ColaFifo Global_Fifo;
 
 void inicializar_ram() {
-    // 1. Asignar memoria dinámica según la configuración del usuario (GlobConfig.frames)
+    //  Asignar memoria dinámica según config
     RAM = (Frame*)malloc(GlobConfig.frames * sizeof(Frame));
     Global_Fifo.history = (int*)malloc(GlobConfig.frames * sizeof(int));
 
@@ -20,27 +20,27 @@ void inicializar_ram() {
         exit(EXIT_FAILURE);
     }
 
-    // 2. Inicializar los marcos según el número solicitado
+    // Inicializar los marcos según el número solicitado
     for (int i = 0; i < GlobConfig.frames; i++) {
         RAM[i].valid = 0;
         RAM[i].thread_id = -1;
         RAM[i].page_index = -1;
-        Global_Fifo.history[i] = -1; 
+        Global_Fifo.history[i] = -1;
     }
-    
+
     Global_Fifo.head = 0;
     Global_Fifo.count = 0;
-    
-    // 3. Limpiamos los punteros de los hilos 
+
+    // Limpiar punteros hilos
     for (int i = 0; i < 10; i++) {
         Thread_Tables[i] = NULL;
         Thread_TLBs[i] = NULL;
     }
 }
 
-// Dormir 1-5ms para simular acceso a almacenamiento secundario (HDD/SSD)
+// Dormir 1-5ms para simular acceso a MS
 void simular_carga_disco() {
-    int margen = (rand() % 5 + 1) * 1000000; 
+    int margen = (rand() % 5 + 1) * 1000000;
     struct timespec remaining, request = { 0, margen };
     nanosleep(&request, &remaining);
 }
@@ -52,7 +52,7 @@ int requestReplaceFrame(int t_id, int page_index) {
     // Registrar Page Fault en las métricas globales
     GlobStats.total_page_faults++;
 
-    // 1. Buscar si existe algún marco libre físicamente
+    //  Buscar si existe algún marco libre físicamente
     for (int i = 0; i < GlobConfig.frames; i++) {
         if (RAM[i].valid == 0) {
             frame = i;
@@ -63,23 +63,29 @@ int requestReplaceFrame(int t_id, int page_index) {
         }
     }
 
-    // 2. Si no hay marcos libres -> Ejecutar Algoritmo de Reemplazo FIFO
+    // Si no hay marcos libres -> Ejecuta FIFO
     if (frame == -1) {
-        GlobStats.total_evictions++; // Registrar desalojo
+        GlobStats.total_evictions++; // Registrar eviction
         frame = Global_Fifo.history[Global_Fifo.head];
 
-        int victim_thread = RAM[frame].thread_id; 
+        int victim_thread = RAM[frame].thread_id;
         int victim_page = RAM[frame].page_index;
 
-        // --- INVALIDACIÓN CRUZADA ---
-        
-        // Invalidar en la Tabla de Páginas del hilo víctima (Cast de void* a PageTable*)
+        // EVICTION
+
+        /*
+        NOTA: Como hay una dependencia circular entre simulator.h, frame_allocator.h y paginacion.h
+              usamos casteo para acceder a los threads, esto porque el void* oculta la estructura original al header,
+              permitiendo que se salte los includes y por ende la dependencia circular
+        */
+
+        // Invalidar en la Tabla de Páginas del hilo víctima
         if (Thread_Tables[victim_thread] != NULL) {
             PageTable* pt_victima = (PageTable*)Thread_Tables[victim_thread];
             pt_victima->entries[victim_page].valid = 0;
         }
 
-        // Invalidar en la TLB del hilo víctima (Cast de void* a tlb*)
+        // Invalidar en la TLB del hilo víctima
         if (Thread_TLBs[victim_thread] != NULL) {
             invalidate_tlb_entry((tlb*)Thread_TLBs[victim_thread], (uint64_t)victim_page);
         }
@@ -89,7 +95,7 @@ int requestReplaceFrame(int t_id, int page_index) {
         Global_Fifo.head = (Global_Fifo.head + 1) % GlobConfig.frames;
     }
 
-    // 3. Ocupar el frame con la nueva página cargada
+    // Ocupar el frame con la nueva página cargada
     RAM[frame].thread_id = t_id;
     RAM[frame].page_index = page_index;
     RAM[frame].valid = 1;
