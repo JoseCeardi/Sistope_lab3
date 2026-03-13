@@ -5,25 +5,23 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#define PAGE_SIZE 4096 
-#define MAX_THREADS 10 
-
 typedef struct {
     int frame_number;
     int valid;            
     int dirty;            
 } PageTableEntry;
 
-typedef struct {
+// Definición con nombre para compatibilidad
+struct PageTable {
     PageTableEntry *entries;
     int num_pages;
-} PageTable;
+};
+typedef struct PageTable PageTable;
 
-// Funciones
+// Prototipos
 PageTable* init_page_table(int num_pages);
 int getFrameByPage(int page_index, PageTable* TP);
 int traductVirtualDir(int page_index, int offset, PageTable* TP);
 void destroy_page_table(PageTable* TP);
-
 
 #endif

@@ -1,12 +1,13 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include "paginacion.h"
+#include "simulator.h"
 
 
 // Tanto la SegTable como la PageTable son privadas de cada proceso,
 // es decir que no son datos globables y no requieren proteccion contra problemas
 // de concurrencia como CC
-
 
 PageTable* init_page_table(int num_pages) {
     PageTable* table = (PageTable*)malloc(sizeof(PageTable));
@@ -56,7 +57,8 @@ int traductVirtualDir(int page_index, int offset, PageTable* TP){
     if (frame == -1){
         return -1;
     } else {
-        return frame * PAGE_SIZE + offset;  // concatena offset
+        // Ahora GlobConfig.page_size será reconocido correctamente
+        return frame * GlobConfig.page_size + offset;  // concatena offset
     }
 }
 
