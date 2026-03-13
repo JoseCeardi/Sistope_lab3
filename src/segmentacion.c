@@ -6,6 +6,15 @@
 //apuntes, brorrar despues
 // --seg-limits dicta la "distancia" o el desplazamiento que habrá entre las direcciones base de cada segmento -> limits var
 
+
+
+
+/*
+NOTA:
+    Pese a que la paginacion es directa a la memoria principal con frame_allocator.c, el caso de la segmentación no se pide eso,
+    el laboratorio solo se pide ver temas de limites y segmentation faults.
+*/
+
 //
 struct segment_table* initSegmentTable(int numSegments, uint64_t* limits) {
     // Reservar memoria para la estructura de la tabla
@@ -40,14 +49,12 @@ struct segment_table* initSegmentTable(int numSegments, uint64_t* limits) {
 }
 
 
-
-//usar asi: int resultado = translateAddress(miTabla, segIdAleatorio, offsetAleatorio, &miDireccionFisica);
-//despues haces un if para los seg fault, 1 esta ok, 0 hay seg fault
+// traduce la la direccion virtual y verifica limites o SegFaults
 int translateAddress(struct segment_table* table, uint64_t segId, uint64_t offset, uint64_t* physicalAddress) {
     
     // Validación de seguridad básica (evitar que el programa se caiga de verdad)
     if (segId >= (uint64_t)table->num_segments) {
-        return 0; // Segfault: El proceso intentó acceder a un segmento que no existe
+        return 0; // Segfault: El proceso intentó acceder a un segmento que no existe [cite: 105]
     }
 
     // Extraer el segmento que el hilo está pidiendo
@@ -55,11 +62,11 @@ int translateAddress(struct segment_table* table, uint64_t segId, uint64_t offse
 
     //  Validación, offset < limit
     if (offset >= segment.limit) {
-        return 0; // Segfault simulado: se pasó del límite permitido 
+        return 0; // Segfault simulado: se pasó del límite permitido [cite: 104, 240]
     }
 
     // Calcular la dirección física: PA = base + offset
-    *physicalAddress = segment.base + offset;
+    *physicalAddress = segment.base + offset; // [cite: 100, 241]
 
     return 1; 
 }
